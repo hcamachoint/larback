@@ -39,10 +39,10 @@ class UserCrudController extends CrudController {
   }
 
   protected function setupReorderOperation()
-    {
-        $this->crud->set('reorder.label', 'name');
-        $this->crud->set('reorder.max_level', 2);
-    }
+  {
+      $this->crud->set('reorder.label', 'name');
+      $this->crud->set('reorder.max_level', 2);
+  }
 
   public function setupListOperation()
   {

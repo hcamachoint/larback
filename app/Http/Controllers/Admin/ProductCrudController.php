@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Requests\ProductRequest;
+use App\Models\Product;
+use App\Http\Requests\ProductCreateRequest;
+use App\Http\Requests\ProductUpdateRequest;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 
@@ -18,6 +20,9 @@ class ProductCrudController extends CrudController
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
+    use \Backpack\CRUD\app\Http\Controllers\Operations\BulkCloneOperation;
+    use \Backpack\CRUD\app\Http\Controllers\Operations\BulkDeleteOperation;
+    use \Backpack\CRUD\app\Http\Controllers\Operations\ReorderOperation;
 
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
@@ -37,14 +42,32 @@ class ProductCrudController extends CrudController
      * @see  https://backpackforlaravel.com/docs/crud-operation-list-entries
      * @return void
      */
-    protected function setupListOperation()
+    protected function setupReorderOperation()
     {
+        $this->crud->set('reorder.label', 'name');
+        $this->crud->set('reorder.max_level', 2);
+    }
+
+    protected function setupListOperation()
+    {       
         CRUD::column('name');
         CRUD::column('description');
         CRUD::column('price');
-        CRUD::column('category_id');
+        CRUD::addColumn([
+            'label' => 'Category',
+            'type' => 'closure',
+            'name' => 'categor_id',
+            'priority' => 2,
+            'function' => function (Product $product) {
+                return $product->category_id
+                    ? $product->category->name
+                    : '';
+            }
+        ]);
         CRUD::column('created_at');
         CRUD::column('updated_at');
+        
+        
 
         /**
          * Columns can be defined using the fluent syntax or array syntax:
@@ -61,13 +84,14 @@ class ProductCrudController extends CrudController
      */
     protected function setupCreateOperation()
     {
-        CRUD::setValidation(ProductRequest::class);
+        CRUD::setValidation(ProductCreateRequest::class);
 
         CRUD::field('name');
         CRUD::field('description');
         CRUD::field('price');
-        //CRUD::field('category_id');
+        CRUD::addField(['name' => 'price', 'type' => 'number', 'label' => 'Price', 'decimals' => 2]);
         CRUD::addField(['name' => 'category_id', 'type' => 'relationship', 'label' => 'Category']);
+        //CRUD::addField(['name' => 'category_id', 'type' => 'relationship', 'label' => 'Category', 'inline_create' => ['entity' => 'category', 'force_select' => true, 'modal_class' => 'modal-dialog modal-xl'],'placeholder' => "Selecciona una cocina"]);
 
         /**
          * Fields can be defined using the fluent syntax or array syntax:
@@ -85,5 +109,27 @@ class ProductCrudController extends CrudController
     protected function setupUpdateOperation()
     {
         $this->setupCreateOperation();
+        CRUD::setValidation(ProductUpdateRequest::class);
+    }
+
+    protected function setupShowOperation()
+    {
+        $this->crud->set('show.setFromDb', false);
+        CRUD::column('name');
+        CRUD::column('description');
+        CRUD::column('price');
+        CRUD::addColumn([
+            'label' => 'Category',
+            'type' => 'closure',
+            'name' => 'categor_id',
+            'priority' => 2,
+            'function' => function (Product $product) {
+                return $product->category_id
+                    ? $product->category->name
+                    : '';
+            }
+        ]);
+        CRUD::column('created_at');
+        CRUD::column('updated_at');
     }
 }

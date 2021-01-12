@@ -18,6 +18,9 @@ class CategoryCrudController extends CrudController
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
+    use \Backpack\CRUD\app\Http\Controllers\Operations\BulkCloneOperation;
+    use \Backpack\CRUD\app\Http\Controllers\Operations\BulkDeleteOperation;
+    use \Backpack\CRUD\app\Http\Controllers\Operations\ReorderOperation;
 
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
@@ -37,6 +40,25 @@ class CategoryCrudController extends CrudController
      * @see  https://backpackforlaravel.com/docs/crud-operation-list-entries
      * @return void
      */
+
+    protected function setupInlineCreateDefaults()
+    {
+        if (method_exists($this, 'setup')) {
+            $this->setup();
+        }
+        if (method_exists($this, 'setupCreateOperation')) {
+            $this->setupCreateOperation();
+        }
+
+        $this->crud->applyConfigurationFromSettings('create');
+    }
+
+    protected function setupReorderOperation()
+    {
+        $this->crud->set('reorder.label', 'name');
+        $this->crud->set('reorder.max_level', 2);
+    }
+    
     protected function setupListOperation()
     {
         CRUD::column('name');
